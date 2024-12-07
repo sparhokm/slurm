@@ -1,0 +1,64 @@
+version: "3.9"
+
+networks:
+  common:
+    external: true
+    name: common
+
+services:
+  minio:
+    image: minio/minio
+    networks:
+      - common
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      BUCKET_NAME: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    container_name: file-storage-minio
+    entrypoint: >
+      sh -c "
+        # Запуск MinIO в фоновом режиме
+        minio server /data --address ':9000' --console-address ':9001' &
+
+        # Ожидание доступности MinIO
+        while ! mc alias set myminio http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}; do
+          echo 'Waiting for MinIO...'
+          sleep 2
+        done
+      
+        # Создание бакета
+        mc mb myminio/${MINIO_BUCKET}
+      
+        # Ожидание завершения процесса MinIO
+        wait
+      "
+    volumes:
+      - minio-volume:/data
+
+  app:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+    restart: always
+    environment:
+      HTTP_SERVER.ADDRESS: "0.0.0.0"
+      MINIO.ENDPOINT: "file-storage-minio:9000"
+      TRACER.ENDPOINT: "http://jaeger:14268/api/traces"
+      REGISTER.URL: "file-register:8001"
+    ports:
+      - "8080:8080"
+    networks:
+      - common
+    depends_on:
+      - minio
+    container_name: file-storage
+    labels:
+      logging: promtail
+      prometheus-job: true
+
+volumes:
+  minio-volume:

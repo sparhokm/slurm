@@ -1,0 +1,83 @@
+version: "3.9"
+
+networks:
+  common:
+    external: true
+    name: common
+
+services:
+  postgres:
+    image: postgres:17
+    networks:
+      - common
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - pg-volume:/var/lib/postgresql/data
+    container_name: file-register-postgres
+
+  pgbouncer:
+    image: bitnami/pgbouncer:1.23.1
+    networks:
+      - common
+    environment:
+      POSTGRESQL_HOST: "file-register-postgres"
+      POSTGRESQL_PORT: "5432"
+      POSTGRESQL_USERNAME: "postgres"
+      POSTGRESQL_PASSWORD: "postgres"
+      POSTGRESQL_DATABASE: "postgres"
+      PGBOUNCER_PORT: "6432"
+      PGBOUNCER_IGNORE_STARTUP_PARAMETERS: "extra_float_digits"
+    ports:
+      - "6433:6432"
+    container_name: file-register-pgbouncer
+    healthcheck:
+      test: [ "CMD", "psql", "-h", "file-register-postgres", "-p", "5432", "-U", "postgres", "-c", "SELECT 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  app:
+    build:
+      context: ..
+      dockerfile: build/service/Dockerfile
+    restart: always
+    environment:
+      GRPC_SERVER.ADDRESS: "0.0.0.0"
+      PROM.ADDRESS: "0.0.0.0"
+      DATABASE.URL: "postgres://postgres:postgres@file-register-pgbouncer:6432/postgres"
+      TRACER.ENDPOINT: "http://jaeger:14268/api/traces"
+    ports:
+      - "8001:8001"
+      - "8083:8080"
+    networks:
+      - common
+    depends_on:
+      - pgbouncer
+    container_name: file-register
+    labels:
+      logging: promtail
+      prometheus-job: true
+
+  outbox:
+    build:
+      context: ..
+      dockerfile: build/outbox/Dockerfile
+    restart: always
+    environment:
+      DATABASE.URL: "postgres://postgres:postgres@file-register-pgbouncer:6432/postgres"
+      BROKER.URL: "redis:6379"
+      TRACER.ENDPOINT: "http://jaeger:14268/api/traces"
+    networks:
+      - common
+    depends_on:
+      - pgbouncer
+    container_name: file-register-outbox
+    labels:
+      logging: promtail
+      prometheus-job: true
+
+volumes:
+  pg-volume:

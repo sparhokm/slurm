@@ -1,0 +1,21 @@
+grpc_server:
+  address: "localhost"
+  port: 8001
+log:
+  min_level: "info"
+database:
+  url: "postgres://postgres:postgres@localhost:6433/postgres"
+prom:
+  address: "localhost"
+  port: 8080
+broker:
+  url: "localhost:6379"
+  password: ""
+outbox:
+  batch_size: 10
+  duration_ms: 100ms
+service_name: "file-register"
+tracer:
+  endpoint: "http://localhost:14268/api/traces"
+  version: "1"
+  enable: true

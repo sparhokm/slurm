@@ -1,0 +1,22 @@
+http_server:
+  address: "localhost"
+  port: 8080
+  timeout: "4s"
+  idle_timeout: "60s"
+  debug: false
+log:
+  min_level: "info"
+minio:
+  endpoint: "localhost:9000"
+  access_key: "minio"
+  secret_ket: "miniopassword"
+  bucket: "storage"
+  use_ssl: false
+register:
+  url: "localhost:8001"
+  idle_timeout: "1s"
+service_name: "file-storage"
+tracer:
+  endpoint: "http://localhost:14268/api/traces"
+  version: "1"
+  enable: true

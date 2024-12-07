@@ -1,0 +1,15 @@
+grpc_server:
+  address: "localhost"
+  port: 8002
+log:
+  min_level: "info"
+database:
+  url: "postgres://postgres:postgres@localhost:6434/postgres"
+broker:
+  url: "localhost:6379"
+  password: ""
+service_name: "subscription"
+tracer:
+  endpoint: "http://localhost:14268/api/traces"
+  version: "1"
+  enable: true

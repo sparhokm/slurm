@@ -1,0 +1,54 @@
+POST {{server}}/auth/login
+Content-Type: application/json
+
+{
+  "username" : "{{username}}",
+  "password" : "{{password}}"
+}
+
+###
+
+DELETE {{server}}/file/1234
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###
+
+POST {{server}}/file/upload?filepath=/a/3323355.txt
+Content-Type: multipart/form-data; boundary=boundary
+Authorization: Bearer {{token}}
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="pas/dos/los/somefile.txt"
+Content-Type: text/plain
+
+lalala23
+--boundary--
+
+###
+
+PUT {{server}}/file/01ef9f33-33ab-6f49-95b5-00155db74190
+Content-Type: multipart/form-data; boundary=boundary
+Authorization: Bearer {{token}}
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="pas/dos/los/somefile.txt"
+Content-Type: text/plain
+
+oplalalala
+--boundary--
+
+###
+
+GET {{server}}/file/download/01ef9f33-33ab-6f49-95b5-00155db74190
+Authorization: Bearer {{token}}
+
+###
+
+GET {{server}}/file/01ef9f21-2045-6a3c-95b5-00155db74190
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{server}}/file/01ef9f21-2045-6a3c-95b5-00155db74190
+Authorization: Bearer {{token}}

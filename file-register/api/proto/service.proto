@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package register_v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/sparhokm/slurm/file-register/pkg/register_v1;register_v1";
+
+service RegisterV1 {
+  rpc AddFile(AddFileIn) returns (AddFileOut);
+  rpc GetFile(GetFileIn) returns (GetFileOut);
+  rpc FindFileByPath(FindFileByPathIn) returns (FindFileByPathOut);
+  rpc UpdateFile(UpdateFileIn) returns (google.protobuf.Empty);
+  rpc DeleteFile(DeleteFileIn) returns (google.protobuf.Empty);
+}
+
+message AddFileIn {
+  int64 ownerID = 2;
+  string filepath = 3;
+  string contentType = 4;
+  int64 size = 5;
+}
+
+message AddFileOut {
+  string id = 1;
+}
+
+message File {
+  string id = 1;
+  int64 ownerID = 2;
+  string filepath = 3;
+  string contentType = 4;
+  int64 size = 5;
+  int64 version = 6;
+}
+
+message GetFileIn {
+  string id = 1;
+}
+
+message GetFileOut {
+  File file = 1;
+}
+
+message FindFileByPathIn {
+  int64 ownerID = 1;
+  string path = 2;
+}
+
+message FindFileByPathOut {
+  File file = 1;
+}
+
+message UpdateFileIn {
+  string id = 1;
+  int64 size = 2;
+  int64 version = 3;
+}
+
+message DeleteFileIn {
+  string id = 1;
+}
+

@@ -1,0 +1,293 @@
+openapi: 3.0.0
+info:
+  title: File Storage API
+  version: 1.0.0
+
+security:
+  - jwt: [ ]
+
+components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Укажите JWT в заголовке Authorization в формате "Bearer <token>"
+  schemas:
+    FileInfo:
+      type: object
+      required: [ id, url, size ]
+      properties:
+        id:
+          type: string
+          description: id файла
+        size:
+          type: integer
+          description: размер файла
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+paths:
+  /auth/login:
+    post:
+      summary: Авторизация пользователя
+      description: Получает JWT токен для авторизации.
+      operationId: authLogin
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ username, password ]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Успешная авторизация и получение токена.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+        '401':
+          description: Неверные учетные данные.
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      summary: Обновить токен
+      description: Обновить JWT токен для авторизации.
+      operationId: authRefreshToken
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ refreshToken ]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Успешно обновлен токен.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /file/upload:
+    post:
+      summary: Добавить файл
+      operationId: fileUpload
+      parameters:
+        - name: filepath
+          in: query
+          required: true
+          description: путь по которому будет сохранён файл
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [ file ]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Файл успешно добавлен.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfo'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен. Пользователь не авторизован.
+        '409':
+          description: Файл уже существует.
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /file/download/{fileId}:
+    get:
+      summary: Скачать файл
+      operationId: fileDownload
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Идентификатор файла.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный ответ
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Заголовок для предложения сохранения файла
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Доступ запрещен. Пользователь не авторизован.
+        '404':
+          description: Файл не найден.
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /file/{fileId}:
+    get:
+      summary: Получить информацию о файле
+      operationId: fileGet
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Идентификатор файла.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный ответ с информацией о файле.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfo'
+        '403':
+          description: Доступ запрещен. Пользователь не авторизован.
+        '404':
+          description: Файл не найден.
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+    put:
+      summary: Обновить файл
+      description: Обновляет существующий файл.
+      operationId: fileUpdate
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Идентификатор файла для обновления.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        '200':
+          description: Файл успешно обновлен.
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен. Пользователь не авторизован.
+        '404':
+          description: Файл не найден.
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Удалить файл
+      description: Удаляет файл по его идентификатору.
+      operationId: fileDelete
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          description: Идентификатор файла для удаления.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Файл успешно удален.
+        '403':
+          description: Доступ запрещен. Пользователь не авторизован.
+        '404':
+          description: Файл не найден.
+        '500':
+          description: Внутрення ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

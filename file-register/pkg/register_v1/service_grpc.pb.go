@@ -25,7 +25,6 @@ const (
 	RegisterV1_FindFileByPath_FullMethodName = "/register_v1.RegisterV1/FindFileByPath"
 	RegisterV1_UpdateFile_FullMethodName     = "/register_v1.RegisterV1/UpdateFile"
 	RegisterV1_DeleteFile_FullMethodName     = "/register_v1.RegisterV1/DeleteFile"
-	RegisterV1_Subscribe_FullMethodName      = "/register_v1.RegisterV1/Subscribe"
 )
 
 // RegisterV1Client is the client API for RegisterV1 service.
@@ -37,7 +36,6 @@ type RegisterV1Client interface {
 	FindFileByPath(ctx context.Context, in *FindFileByPathIn, opts ...grpc.CallOption) (*FindFileByPathOut, error)
 	UpdateFile(ctx context.Context, in *UpdateFileIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteFile(ctx context.Context, in *DeleteFileIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Subscribe(ctx context.Context, in *SubscribeIn, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type registerV1Client struct {
@@ -93,15 +91,6 @@ func (c *registerV1Client) DeleteFile(ctx context.Context, in *DeleteFileIn, opt
 	return out, nil
 }
 
-func (c *registerV1Client) Subscribe(ctx context.Context, in *SubscribeIn, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, RegisterV1_Subscribe_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // RegisterV1Server is the server API for RegisterV1 service.
 // All implementations must embed UnimplementedRegisterV1Server
 // for forward compatibility
@@ -111,7 +100,6 @@ type RegisterV1Server interface {
 	FindFileByPath(context.Context, *FindFileByPathIn) (*FindFileByPathOut, error)
 	UpdateFile(context.Context, *UpdateFileIn) (*emptypb.Empty, error)
 	DeleteFile(context.Context, *DeleteFileIn) (*emptypb.Empty, error)
-	Subscribe(context.Context, *SubscribeIn) (*emptypb.Empty, error)
 	mustEmbedUnimplementedRegisterV1Server()
 }
 
@@ -133,9 +121,6 @@ func (UnimplementedRegisterV1Server) UpdateFile(context.Context, *UpdateFileIn) 
 }
 func (UnimplementedRegisterV1Server) DeleteFile(context.Context, *DeleteFileIn) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
-}
-func (UnimplementedRegisterV1Server) Subscribe(context.Context, *SubscribeIn) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedRegisterV1Server) mustEmbedUnimplementedRegisterV1Server() {}
 
@@ -240,24 +225,6 @@ func _RegisterV1_DeleteFile_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RegisterV1_Subscribe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SubscribeIn)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RegisterV1Server).Subscribe(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: RegisterV1_Subscribe_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RegisterV1Server).Subscribe(ctx, req.(*SubscribeIn))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // RegisterV1_ServiceDesc is the grpc.ServiceDesc for RegisterV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -284,10 +251,6 @@ var RegisterV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteFile",
 			Handler:    _RegisterV1_DeleteFile_Handler,
-		},
-		{
-			MethodName: "Subscribe",
-			Handler:    _RegisterV1_Subscribe_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
